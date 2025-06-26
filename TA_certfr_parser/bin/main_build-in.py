@@ -11,6 +11,7 @@ import configparser
 import locale
 import warnings
 from urllib3.exceptions import InsecureRequestWarning
+from collections import OrderedDict
 
 # Suppress only the single InsecureRequestWarning from urllib3 needed for self-signed certificates.
 warnings.simplefilter('ignore', InsecureRequestWarning)
@@ -41,7 +42,7 @@ if not os.path.exists(CONFIG_FILE):
         'feed_path': '/avis/feed/'
     }
 else:
-    print(f"INFO: Lecture du fichier de configuration: {CONFIG_FILE}")
+    #print(f"INFO: Lecture du fichier de configuration: {CONFIG_FILE}")
     config.read(CONFIG_FILE)
 
 # Network settings
@@ -125,11 +126,12 @@ def search_cve(urlfeed):
             pub_date_element = bloc.find("pubDate")
             pub_date = pub_date_element.text if pub_date_element is not None and pub_date_element.text is not None else ""
             
-            items.append({"url": link, "pubDate": pub_date})
+            titre = titre_element.text
+            items.append({"url": link, "pubDate": pub_date, "titre": titre})
     except Exception as e:
         print(f"ERREUR: Erreur lors du parsing XML: {e}", file=sys.stderr)
 
-    print(f"INFO: {len(items)} alertes trouvées pour l'année en cours.")
+    #print(f"INFO: {len(items)} alertes trouvées pour l'année en cours.")
     return items
 
 def clean_text(text):
@@ -216,8 +218,19 @@ def pull_data(url):
     for report in urlPool:
         alerte = match_version(report["url"])
         alerte["pubDate"] = report["pubDate"]
-        alertes.append(alerte)
-    
+        alerte["titre"] = report["titre"]
+        # Réordonner les clés pour que 'titre' soit avant 'risque' (et les autres sections dynamiques)
+        ordered = OrderedDict()
+        ordered["titre"] = alerte.get("titre", "")
+        ordered["URL"] = alerte.get("URL", "")
+        ordered["pubDate"] = alerte.get("pubDate", "")
+        if "risque" in alerte:
+            ordered["risque"] = alerte["risque"]
+        for k, v in alerte.items():
+            if k not in ordered and k not in ("titre", "URL", "pubDate", "risque"):
+                ordered[k] = v
+        alertes.append(ordered)
+        # Impression retirée d'ici
     #print(f"INFO: {len(alertes)} alertes ont été traitées.")
     return alertes
 
@@ -264,19 +277,31 @@ def entry_compare(url):
     new_urls = current_url - tmp_url
 
     if not new_urls:
-        print("INFO: Aucune nouvelle URL à traiter pour Splunk.")
+        # print("INFO: Aucune nouvelle URL à traiter pour Splunk.")
+        pass
     else:
         #print(f"INFO: {len(new_urls)} nouvelle(s) URL(s) trouvée(s). Traitement en cours...")
         for url_ in new_urls:
             alerte_details = match_version(url_)
             pubdate = next((d["pubDate"] for d in data if d.get("URL") == url_), "")
+            titre = next((d["titre"] for d in data if d.get("URL") == url_), "")
             alerte_details["pubDate"] = pubdate
-            update.append(alerte_details)
-            # Imprime chaque nouvelle alerte en JSON pour que Splunk l'indexe
-            print(json.dumps(alerte_details, ensure_ascii=False))
+            alerte_details["titre"] = titre
+            # Réordonner les clés comme dans pull_data
+            ordered = OrderedDict()
+            ordered["titre"] = alerte_details.get("titre", "")
+            ordered["URL"] = alerte_details.get("URL", "")
+            ordered["pubDate"] = alerte_details.get("pubDate", "")
+            if "risque" in alerte_details:
+                ordered["risque"] = alerte_details["risque"]
+            for k, v in alerte_details.items():
+                if k not in ordered and k not in ("titre", "URL", "pubDate", "risque"):
+                    ordered[k] = v
+            update.append(ordered)
+            print(json.dumps(ordered, ensure_ascii=False))
 
         # Met à jour le fichier de statut avec les nouvelles entrées
-        print(f"INFO: Mise à jour du fichier de statut {STATE_FILE} avec {len(update)} nouvelle(s) entrée(s).")
+        #print(f"INFO: Mise à jour du fichier de statut {STATE_FILE} avec {len(update)} nouvelle(s) entrée(s).")
         tmp.extend(update)
         try:
             with open(STATE_FILE, "w", encoding="utf-8") as f:
@@ -286,9 +311,9 @@ def entry_compare(url):
             print(f"ERREUR: Erreur d'écriture lors de la mise à jour de {STATE_FILE}: {e}", file=sys.stderr)
 
 def main(mainUrl):
-    print("INFO: Démarrage du script principal.")
+    # print("INFO: Démarrage du script principal.")
     entry_compare(mainUrl)
-    print("INFO: Fin du script principal.")
+    # print("INFO: Fin du script principal.")
 
 if __name__ == "__main__":
     main(FEED_URL) 

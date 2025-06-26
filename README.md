@@ -21,7 +21,7 @@ Ce projet automatise la récupération, l'analyse et l'export des alertes de sé
 - **Parsing intelligent** : extraction des alertes de l'année en cours, récupération des détails de chaque alerte.
 - **Extraction structurée** des sections importantes (risques, description, etc.) depuis la page de chaque alerte.
 - **Détection des nouveautés** : comparaison avec l'historique pour ne traiter que les nouvelles alertes.
-- **Export JSON** : chaque nouvelle alerte est affichée en JSON (pour Splunk) et ajoutée à l'historique.
+- **Export JSON** : chaque alerte est affichée en JSON, une par une : lors de la première exécution, toutes les alertes sont affichées ; lors des exécutions suivantes, seules les nouvelles alertes sont affichées. Le champ `titre` (titre de l'article) est inclus dans chaque objet JSON, et les clés sont ordonnées pour faciliter l'intégration.
 - **Gestion du proxy** : configuration simple pour s'adapter à tous les réseaux d'entreprise.
 - **Robustesse** : gestion des erreurs réseau, des problèmes d'encodage, et des cas particuliers du flux RSS.
 
@@ -62,8 +62,10 @@ parserPython/
 4. **Comparaison avec l'historique**  
    - Les nouvelles alertes (non présentes dans `tmp.json`) sont identifiées.
 5. **Export et mise à jour**  
-   - Les nouvelles alertes sont affichées en JSON (pour Splunk ou autre).
+   - **Première exécution** : toutes les alertes sont affichées en JSON, une par une.
+   - **Exécutions suivantes** : seules les nouvelles alertes sont affichées en JSON, une par une.
    - L'historique (`tmp.json`) est mis à jour pour éviter les doublons lors des prochains lancements.
+   - Chaque objet JSON contient le champ `titre` (titre de l'article) et les clés sont ordonnées pour faciliter l'intégration.
 
 ---
 
