@@ -120,13 +120,37 @@ Après modification du proxy, relancez le script pour prendre en compte la nouve
 
 ## Utilisation
 
-1. **Installer les dépendances**  
-   ```bash
-   pip install -r requirements.txt
-   ```
-2. **Configurer le proxy si besoin**  
+
+1. **Configurer le proxy si besoin**  
    Modifier `TA_certfr_parser/local/inputs.conf`.
-3. **Lancer le script principal**  
+2. **Lancer le script principal**  
    ```bash
    python3 TA_certfr_parser/bin/main_build-in.py
+   ```
+
+## Utilisation de `main.py` (mode test/développement)
+
+Pour utiliser `main.py` :
+
+1. **Créer le dossier `data/` à la racine du projet**
+   ```bash
+   mkdir data
+   ```
+   Ce dossier servira à stocker le fichier `tmp.json` généré par le script.
+
+2. **Installer les dépendances nécessaires**
+   Le script `main.py` nécessite les paquets suivants :
+   - requests
+   - pandas
+   - lxml
+   - beautifulsoup4
+
+   Installez-les avec la commande :
+   ```bash
+   pip install requests pandas lxml beautifulsoup4
+   ```
+
+3. **Lancer le script**
+   ```bash
+   python main.py
    ```
