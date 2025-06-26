@@ -45,7 +45,7 @@ else:
     config.read(CONFIG_FILE)
 
 # Network settings
-PROXY = " " # si vous vouler passer par un proxy remplisez la variable avec votre proxy 
+PROXY = "" # si vous vouler passer par un proxy remplisez la variable avec votre proxy 
 TARGET_HOSTNAME = config.get('network', 'target_hostname', fallback='www.cert.ssi.gouv.fr')
 FEED_PATH = config.get('network', 'feed_path', fallback='/avis/feed/')
 FEED_URL = f"https://{TARGET_HOSTNAME}{FEED_PATH}"
