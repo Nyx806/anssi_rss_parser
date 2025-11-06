@@ -142,7 +142,7 @@ def clean_text(text):
     return text
 
 def extract_sections(html):
-    excluded_sections = {"documentation", "gestion detaillee du document", "solutions"}
+    excluded_sections = {"gestion detaillee du document", "solutions"}
 
     class SimpleParser(HTMLParser):
         def __init__(self):
@@ -151,6 +151,8 @@ def extract_sections(html):
             self.in_h2 = False
             self.current_section = None
             self.sections = {}
+            self.URLregex =  r'https://www\.cve\.org/CVERecord\?id=(?P<cve>CVE-\d{4}-\d+)'
+            self.CVEregex = r'CVE'
             self.capture_data = False
             self.current_data = ""
 
@@ -172,7 +174,11 @@ def extract_sections(html):
                 if self.capture_data and self.current_section and self.current_section not in excluded_sections:
                     clean = clean_text(self.current_data)
                     if clean:
-                        self.sections.setdefault(self.current_section, []).append(clean)
+                        if self.current_section == "documentation":
+                            if re.search(self.URLregex,clean) or re.search(self.CVEregex,clean):
+                                self.sections.setdefault(self.current_section, []).append(clean)
+                        else :
+                            self.sections.setdefault(self.current_section, []).append(clean)
                 self.capture_data = False
                 self.current_data = ""
 
